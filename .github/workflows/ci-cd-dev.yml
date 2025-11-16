@@ -14,10 +14,10 @@ env:
     ECR_REPO: ${{ secrets.ECR_REPOSITORY }} #REVISAR QUE ES ECR
 
 jobs:
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
+    build:
+      name: Build
+      runs-on: ubuntu-latest
+      steps:
         - uses: actions/checkout@v4
 
         - name: Setup Python

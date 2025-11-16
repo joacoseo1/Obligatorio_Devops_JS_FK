@@ -97,14 +97,6 @@ resource "aws_ecs_task_definition" "app" {
         containerPort = var.app_container_port
         protocol      = "tcp"
       }]
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          "awslogs-group"         = local.log_group_name
-          "awslogs-region"        = var.aws_region
-          "awslogs-stream-prefix" = "api-gateway"
-        }
-      }
       environment = [
         { name = "PRODUCT_SERVICE_URL",   value = "http://localhost:8001" },
         { name = "INVENTORY_SERVICE_URL", value = "http://localhost:8002" }
@@ -114,28 +106,12 @@ resource "aws_ecs_task_definition" "app" {
       name      = "product-service"
       image     = "${local.ecr_product_repo_url}:${var.image_tag_product}"
       essential = true
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          "awslogs-group"         = local.log_group_name
-          "awslogs-region"        = var.aws_region
-          "awslogs-stream-prefix" = "product-service"
-        }
-      }
       environment = []
     },
     {
       name      = "inventory-service"
       image     = "${local.ecr_inventory_repo_url}:${var.image_tag_inventory}"
       essential = true
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          "awslogs-group"         = local.log_group_name
-          "awslogs-region"        = var.aws_region
-          "awslogs-stream-prefix" = "inventory-service"
-        }
-      }
       environment = []
     }
   ])

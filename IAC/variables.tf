@@ -99,12 +99,6 @@ variable "existing_task_role_name" {
   description = "If set, use this IAM role for ECS task taskRole instead of creating one"
 }
 
-variable "existing_instance_profile_name" {
-  type        = string
-  default     = null
-  description = "If set, use this EC2 instance profile for ECS instances instead of creating one"
-}
-
 # Use existing VPC/Subnets/ALB/TG/ECR/Logs instead of creating
 variable "use_existing_vpc" {
   type        = bool

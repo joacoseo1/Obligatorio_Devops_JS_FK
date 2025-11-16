@@ -4,6 +4,7 @@ on:
     push:
         branches:
             - dev
+            - PiplelineDEV
     pull_request:
         branches:
             - dev

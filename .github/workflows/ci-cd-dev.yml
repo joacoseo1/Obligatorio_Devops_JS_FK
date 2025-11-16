@@ -1,0 +1,81 @@
+name: CI/CD - Dev
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REPO: ${{ secrets.ECR_REPOSITORY }} #REVISAR QUE ES ECR
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go (if service in Go)
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+
+      - name: Build (example product-service)
+        working-directory: ./product-service
+        run: |
+          go env
+          go mod download
+          go build -v -o ./bin/product ./...
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: product-bin
+          path: product-service/bin
+
+  test:
+    name: Test SonarQube
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # deploy:
+  #   name: Deploy
+  #   runs-on: ubuntu-latest
+  #   needs: test
+  #   environment: dev
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: Configure AWS creds
+  #       uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ${{ secrets.AWS_REGION }}
+
+  #     - name: Login to ECR #REVISAR
+  #       id: login-ecr
+  #       uses: aws-actions/amazon-ecr-login@v1
+
+  #     - name: Build, tag and push image
+  #       run: |
+  #         IMAGE_TAG=dev-${{ github.sha }}
+  #         docker build -t $ECR_REPO:${IMAGE_TAG} ./product-service
+  #         docker tag $ECR_REPO:${IMAGE_TAG} ${AWS_ACCOUNT_ID}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/$ECR_REPO:${IMAGE_TAG}
+  #         docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/$ECR_REPO:${IMAGE_TAG}
+
+  #     - name: Deploy to ECS (update service)
+  #       run: |
+  #         # Use aws cli to update task definition or use ecs-deploy action
+  #         echo "Implement ecs update-task-definition and update-service here"

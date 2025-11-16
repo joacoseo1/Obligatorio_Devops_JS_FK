@@ -85,3 +85,22 @@ variable "ecs_instance_disk_size" {
   type    = number
   default = 30
 }
+
+# Optional: use pre-existing IAM instead of creating
+variable "existing_task_execution_role_name" {
+  type        = string
+  default     = null
+  description = "If set, use this IAM role for ECS task execution instead of creating one"
+}
+
+variable "existing_task_role_name" {
+  type        = string
+  default     = null
+  description = "If set, use this IAM role for ECS task taskRole instead of creating one"
+}
+
+variable "existing_instance_profile_name" {
+  type        = string
+  default     = null
+  description = "If set, use this EC2 instance profile for ECS instances instead of creating one"
+}

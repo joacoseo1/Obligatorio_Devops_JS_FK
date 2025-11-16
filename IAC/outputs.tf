@@ -3,7 +3,7 @@ output "vpc_id" {
 }
 
 output "alb_dns_name" {
-  value = var.existing_alb_name != null ? data.aws_lb.existing[0].dns_name : aws_lb.alb[0].dns_name
+  value = aws_lb.alb[0].dns_name
 }
 
 output "ecr_api_gateway_repo" {

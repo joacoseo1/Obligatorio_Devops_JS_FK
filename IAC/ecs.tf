@@ -3,13 +3,13 @@ resource "aws_ecs_cluster" "cluster" {
 }
 
 resource "aws_cloudwatch_log_group" "ecs" {
-  count             = var.existing_log_group_name == null ? 1 : 0
+  count             = 1
   name              = "/ecs/${var.project_name}-${var.env}"
   retention_in_days = 14
 }
 
 locals {
-  log_group_name = var.existing_log_group_name != null ? var.existing_log_group_name : aws_cloudwatch_log_group.ecs[0].name
+  log_group_name = aws_cloudwatch_log_group.ecs[0].name
 }
 
 # Launch template for ECS EC2 instances

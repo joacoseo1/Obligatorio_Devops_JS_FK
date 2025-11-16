@@ -1,13 +1,7 @@
 name: CI/CD Dev
 
 on:
-  push:
-    branches:
-      - dev
-      - PipelineDEV
-  pull_request:
-    branches:
-      - dev
+  workflow_dispatch
 
 jobs:
   build-and-push:

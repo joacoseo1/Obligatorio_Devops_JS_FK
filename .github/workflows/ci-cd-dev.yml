@@ -120,17 +120,17 @@ jobs:
                   docker tag api-gateway:${{ env.TAG }} $IMAGE:${{ env.TAG }}
                   docker push $IMAGE:${{ env.TAG }}
 
-            - name: Debug product-service ECR
-              run: |
-                echo "IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_PRODUCT }}:${{ env.TAG }}"
-                aws ecr describe-repositories --repository-names "${{ secrets.ECR_PRODUCT }}"
-
             - name: Build & Push product-service
               run: |
                   IMAGE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_PRODUCT }}"
                   docker build -t product-service:${{ env.TAG }} ./product-service
                   docker tag product-service:${{ env.TAG }} $IMAGE:${{ env.TAG }}
                   docker push $IMAGE:${{ env.TAG }}
+
+            - name: Debug inventory-service ECR
+              run: |
+                echo "IMAGE=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_INVENTORY }}:${{ env.TAG }}"
+                aws ecr describe-repositories --repository-names "${{ secrets.ECR_INVENTORY }}"
 
             - name: Build & Push inventory-service
               run: |

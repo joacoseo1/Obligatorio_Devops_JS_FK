@@ -2,16 +2,6 @@ resource "aws_ecs_cluster" "cluster" {
   name = "${var.project_name}-${var.env}-cluster"
 }
 
-resource "aws_cloudwatch_log_group" "ecs" {
-  count             = 1
-  name              = "/ecs/${var.project_name}-${var.env}"
-  retention_in_days = 14
-}
-
-locals {
-  log_group_name = aws_cloudwatch_log_group.ecs[0].name
-}
-
 # Launch template for ECS EC2 instances
 data "aws_ssm_parameter" "ecs_optimized_ami" {
   name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"

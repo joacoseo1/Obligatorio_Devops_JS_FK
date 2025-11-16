@@ -1,5 +1,5 @@
 resource "aws_vpc" "this" {
-  count                = 1
+  count                = 0
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
   tags = {

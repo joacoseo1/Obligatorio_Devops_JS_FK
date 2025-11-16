@@ -39,3 +39,17 @@ variable "app_container_port" {
   default = 3000
 }
 
+variable "image_tag_api" {
+  type    = string
+  default = "latest"
+}
+
+variable "image_tag_product" {
+  type    = string
+  default = "latest"
+}
+
+variable "image_tag_inventory" {
+  type    = string
+  default = "latest"
+}

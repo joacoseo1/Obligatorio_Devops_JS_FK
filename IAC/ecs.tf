@@ -20,7 +20,7 @@ resource "aws_ecs_task_definition" "app" {
   container_definitions = jsonencode([
     {
       name      = "api-gateway"
-      image     = "${aws_ecr_repository.api_gateway.repository_url}:latest"
+      image     = "${aws_ecr_repository.api_gateway.repository_url}:${var.image_tag_api}"
       essential = true
       portMappings = [{
         containerPort = var.app_container_port
@@ -38,8 +38,9 @@ resource "aws_ecs_task_definition" "app" {
     },
     {
       name      = "product-service"
-      image     = "${aws_ecr_repository.product.repository_url}:latest"
+      image     = "${aws_ecr_repository.product.repository_url}:${var.image_tag_product}"
       essential = true
+      # no hostPort; internal container only
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -52,7 +53,7 @@ resource "aws_ecs_task_definition" "app" {
     },
     {
       name      = "inventory-service"
-      image     = "${aws_ecr_repository.inventory.repository_url}:latest"
+      image     = "${aws_ecr_repository.inventory.repository_url}:${var.image_tag_inventory}"
       essential = true
       logConfiguration = {
         logDriver = "awslogs"

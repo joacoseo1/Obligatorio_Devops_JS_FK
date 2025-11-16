@@ -1,17 +1,54 @@
-name: CI/CD Dev
+name: Terraform Deploy + Build & Deploy
 
 on:
   push:
     branches:
       - dev
       - PipelineDEV
-  pull_request:
-    branches:
-      - dev
+  workflow_dispatch:
+
+env:
+  TF_WORKING_DIR: ./IAC
 
 jobs:
+
+  terraform-init-apply:
+    name: Terraform Init & Apply (create infra)
+    runs-on: ubuntu-latest
+    outputs:
+      applied: ${{ steps.apply.outputs.applied }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }} # only if temporales; ok si está vacío
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -input=false
+
+      - name: Terraform Plan (create infra)
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform plan -out=tfplan -input=false
+
+      - name: Terraform Apply (create infra)
+        id: apply
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform apply -auto-approve tfplan
+        continue-on-error: false
+
   build-and-push:
-    name: Build to ECR
+    name: Build images & Push to ECR
+    needs: terraform-init-apply
     runs-on: ubuntu-latest
 
     steps:
@@ -22,51 +59,67 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Login ECR
+      - name: Login to ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build api-gateway
+      - name: Set IMAGE_TAG
+        id: vars
+        run: echo "TAG=dev-${GITHUB_SHA::8}" >> $GITHUB_ENV
+
+      - name: Build & Push api-gateway
         run: |
           IMAGE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_API_GATEWAY }}"
-          docker build -t api-gateway:dev ./api-gateway
-          docker tag api-gateway:dev $IMAGE:dev-${GITHUB_SHA}
-          docker push $IMAGE:dev-${GITHUB_SHA}
+          docker build -t api-gateway:${{ env.TAG }} ./api-gateway
+          docker tag api-gateway:${{ env.TAG }} $IMAGE:${{ env.TAG }}
+          docker push $IMAGE:${{ env.TAG }}
 
-      - name: Build product-service
+      - name: Build & Push product-service
         run: |
           IMAGE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_PRODUCT }}"
-          docker build -t product-service:dev ./product-service
-          docker tag product-service:dev $IMAGE:dev-${GITHUB_SHA}
-          docker push $IMAGE:dev-${GITHUB_SHA}
+          docker build -t product-service:${{ env.TAG }} ./product-service
+          docker tag product-service:${{ env.TAG }} $IMAGE:${{ env.TAG }}
+          docker push $IMAGE:${{ env.TAG }}
 
-      - name: Build inventory-service
+      - name: Build & Push inventory-service
         run: |
           IMAGE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_INVENTORY }}"
-          docker build -t inventory-service:dev ./inventory-service
-          docker tag inventory-service:dev $IMAGE:dev-${GITHUB_SHA}
-          docker push $IMAGE:dev-${GITHUB_SHA}
+          docker build -t inventory-service:${{ env.TAG }} ./inventory-service
+          docker tag inventory-service:${{ env.TAG }} $IMAGE:${{ env.TAG }}
+          docker push $IMAGE:${{ env.TAG }}
 
-  deploy-ecs:
-    name: Deploy ECS
-    runs-on: ubuntu-latest
+  terraform-update-taskdef:
+    name: Terraform Apply (update images & deploy)
     needs: build-and-push
-    environment: dev
-
+    runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Deploy ECS
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -input=false
+
+      - name: Terraform Plan (update image tags)
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
-          aws ecs update-service \
-            --cluster obligatorioDevops-dev-cluster \
-            --service obligatorioDevops-dev-service \
-            --force-new-deployment
+          terraform plan -out=tfplan -input=false \
+            -var="image_tag_api=${{ env.TAG }}" \
+            -var="image_tag_product=${{ env.TAG }}" \
+            -var="image_tag_inventory=${{ env.TAG }}"
+
+      - name: Terraform Apply (update images & deploy)
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform apply -auto-approve tfplan

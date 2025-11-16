@@ -36,7 +36,7 @@ variable "desired_count" {
 # Ports
 variable "app_container_port" {
   type    = number
-  default = 3000
+  default = 8000
 }
 
 variable "image_tag_api" {
@@ -52,4 +52,36 @@ variable "image_tag_product" {
 variable "image_tag_inventory" {
   type    = string
   default = "latest"
+}
+
+# ECS EC2 capacity (Auto Scaling Group)
+variable "ecs_instance_type" {
+  type    = string
+  default = "t3.small"
+}
+
+variable "ecs_asg_min_size" {
+  type    = number
+  default = 1
+}
+
+variable "ecs_asg_max_size" {
+  type    = number
+  default = 3
+}
+
+variable "ecs_asg_desired_size" {
+  type    = number
+  default = 1
+}
+
+variable "ecs_ssh_key_name" {
+  type        = string
+  default     = null
+  description = "Optional: EC2 key pair name for SSH (set to null to disable)"
+}
+
+variable "ecs_instance_disk_size" {
+  type    = number
+  default = 30
 }

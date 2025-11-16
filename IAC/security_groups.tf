@@ -40,3 +40,18 @@ resource "aws_security_group" "ecs_sg" {
   }
 }
 
+# Security group for ECS EC2 instances (container instances)
+resource "aws_security_group" "ecs_instances_sg" {
+  name        = "${var.project_name}-${var.env}-ecs-instances-sg"
+  description = "ECS container instances"
+  vpc_id      = aws_vpc.this.id
+
+  # No inbound needed by default (tasks use awsvpc and are reached via their ENIs)
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+

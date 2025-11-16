@@ -9,10 +9,10 @@ on:
 
 env:
     TF_WORKING_DIR: ./IAC
-    # Optional remote state backend configuration via secrets
     TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
     TF_STATE_KEY: ${{ secrets.TF_STATE_KEY }}
     TF_STATE_DDB_TABLE: ${{ secrets.TF_STATE_DDB_TABLE }}
+    TAG: devJSFK
 
 jobs:
     terraform-init-apply:

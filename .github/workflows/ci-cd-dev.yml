@@ -12,7 +12,6 @@ env:
     TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
     TF_STATE_KEY: ${{ secrets.TF_STATE_KEY }}
     TF_STATE_DDB_TABLE: ${{ secrets.TF_STATE_DDB_TABLE }}
-    TAG: devJSFK
 
 jobs:
     terraform-init-apply:
@@ -113,6 +112,12 @@ jobs:
             - name: Set IMAGE_TAG
               id: vars
               run: echo "TAG=dev-${GITHUB_SHA::8}" >> $GITHUB_ENV
+
+            - name: Debug Docker image
+              run: |
+                IMAGE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_API_GATEWAY }}"
+                echo "Pushing to: $IMAGE:${{ env.TAG }}"
+
 
             - name: Build & Push api-gateway
               run: |

@@ -1,5 +1,5 @@
 aws_region     = "us-east-1"
 aws_account_id = "975050128825"
-project_name   = "obligatorioDevops"
+project_name   = "obligatoriodevops"
 env            = "dev"
 

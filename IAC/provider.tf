@@ -6,7 +6,7 @@ terraform {
     }
   }
   required_version = ">= 1.4"
-  # backend "s3" {} # opcional: descomentá y configurá si querés state remoto
+  backend "s3" {}
 }
 
 provider "aws" {

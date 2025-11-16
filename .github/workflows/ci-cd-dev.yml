@@ -9,72 +9,22 @@ on:
         branches:
             - dev
 
-env:
-    AWS_REGION: ${{ secrets.AWS_REGION }}
-    ECR_REPO: ${{ secrets.ECR_REPOSITORY }} #REVISAR QUE ES ECR
-
 jobs:
     build:
-      name: Build
-      runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v4
 
-        - name: Setup Python
-          uses: actions/setup-python@v4
-          with:
-              python-version: "3.11"
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v3
 
-        - name: Install dependencies
-          working-directory: ./product-service
+        - name: Build api-gateway image
           run: |
-              pip install -r requirements.txt
+            docker build -t api-gateway:ci ./api-gateway
 
-        - name: Upload artifact
-          uses: actions/upload-artifact@v4
-          with:
-              name: product-service
-              path: product-service/
+        - name: Build product-service image
+          run: |
+            docker build -t product-service:ci ./product-service
 
-    # test:
-        # name: Test SonarQube SOLO EN PROD
-        # runs-on: ubuntu-latest
-        # steps:
-        #   - uses: actions/checkout@v4
-        #     with:
-        #       fetch-depth: 0
-        #   - name: SonarQube Scan
-        #     uses: SonarSource/sonarqube-scan-action@v6
-        #     env:
-        #       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-    # deploy:
-    #   name: Deploy
-    #   runs-on: ubuntu-latest
-    #   needs: test
-    #   environment: dev
-    #   steps:
-    #     - uses: actions/checkout@v4
-
-    #     - name: Configure AWS creds
-    #       uses: aws-actions/configure-aws-credentials@v2
-    #       with:
-    #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #         aws-region: ${{ secrets.AWS_REGION }}
-
-    #     - name: Login to ECR #REVISAR
-    #       id: login-ecr
-    #       uses: aws-actions/amazon-ecr-login@v1
-
-    #     - name: Build, tag and push image
-    #       run: |
-    #         IMAGE_TAG=dev-${{ github.sha }}
-    #         docker build -t $ECR_REPO:${IMAGE_TAG} ./product-service
-    #         docker tag $ECR_REPO:${IMAGE_TAG} ${AWS_ACCOUNT_ID}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/$ECR_REPO:${IMAGE_TAG}
-    #         docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/$ECR_REPO:${IMAGE_TAG}
-
-    #     - name: Deploy to ECS (update service)
-    #       run: |
-    #         # Use aws cli to update task definition or use ecs-deploy action
-    #         echo "Implement ecs update-task-definition and update-service here"
+        - name: Build inventory-service image
+          run: |
+            docker build -t inventory-service:ci ./inventory-service

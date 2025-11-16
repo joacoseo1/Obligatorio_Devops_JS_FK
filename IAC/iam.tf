@@ -10,8 +10,8 @@
 ###############################################
 
 variable "existing_task_execution_role_arn" {
-  type        = string,
-  default = null,
+  type        = string
+  default     = null
   description = "ARN de un rol IAM existente para task execution (obligatorio)"
 }
 
@@ -22,8 +22,8 @@ variable "existing_task_role_arn" {
 }
 
 variable "existing_instance_profile_name" {
-  type        = string,
-  default = null,
+  type        = string
+  default     = null
   description = "Nombre de instance profile existente para instancias ECS EC2"
 }
 

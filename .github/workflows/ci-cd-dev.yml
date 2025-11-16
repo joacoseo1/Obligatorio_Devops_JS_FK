@@ -14,7 +14,7 @@ env:
     ECR_REPO: ${{ secrets.ECR_REPOSITORY }} #REVISAR QUE ES ECR
 
 jobs:
-    build:
+  build:
     name: Build
     runs-on: ubuntu-latest
     steps:
@@ -36,7 +36,7 @@ jobs:
               name: product-service
               path: product-service/
 
-    test:
+    # test:
         # name: Test SonarQube SOLO EN PROD
         # runs-on: ubuntu-latest
         # steps:

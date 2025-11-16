@@ -25,7 +25,7 @@ resource "aws_lb_target_group" "tg" {
 }
 
 resource "aws_lb_listener" "http" {
-  count             = var.existing_alb_name != null ? 0 : 1
+  count             = 1
   load_balancer_arn = aws_lb.alb[0].arn
   port              = 80
   protocol          = "HTTP"

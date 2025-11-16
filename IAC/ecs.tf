@@ -25,10 +25,6 @@ resource "aws_launch_template" "ecs" {
 
   vpc_security_group_ids = [aws_security_group.ecs_instances_sg.id]
 
-  iam_instance_profile {
-    name = local.instance_profile_name
-  }
-
   block_device_mappings {
     device_name = "/dev/xvda"
     ebs {
@@ -101,8 +97,6 @@ resource "aws_ecs_task_definition" "app" {
   requires_compatibilities = ["EC2"]
   cpu                      = "1024"
   memory                   = "2048"
-  execution_role_arn       = local.task_execution_role_arn
-  task_role_arn            = local.task_role_arn
 
   container_definitions = jsonencode([
     {

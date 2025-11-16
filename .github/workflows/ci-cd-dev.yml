@@ -10,7 +10,7 @@ on:
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
-  ECR_REPO: ${{ secrets.ECR_REPOSITORY }} #REVISAR QUE ES ECR
+  ECR_REPO: ${{ secrets.ECR_REPOSITORY }}
 
 jobs:
   build:

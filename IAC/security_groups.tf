@@ -1,7 +1,7 @@
 resource "aws_security_group" "alb_sg" {
   name        = "${var.project_name}-${var.env}-alb-sg"
   description = "Allow HTTP to ALB"
-  vpc_id      = aws_vpc.this.id
+  vpc_id      = local.vpc_id
 
   ingress {
     description      = "HTTP"
@@ -22,7 +22,7 @@ resource "aws_security_group" "alb_sg" {
 resource "aws_security_group" "ecs_sg" {
   name        = "${var.project_name}-${var.env}-ecs-sg"
   description = "Tasks security group"
-  vpc_id      = aws_vpc.this.id
+  vpc_id      = local.vpc_id
 
   ingress {
     from_port       = var.app_container_port
@@ -44,7 +44,7 @@ resource "aws_security_group" "ecs_sg" {
 resource "aws_security_group" "ecs_instances_sg" {
   name        = "${var.project_name}-${var.env}-ecs-instances-sg"
   description = "ECS container instances"
-  vpc_id      = aws_vpc.this.id
+  vpc_id      = local.vpc_id
 
   # No inbound needed by default (tasks use awsvpc and are reached via their ENIs)
   egress {

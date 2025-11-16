@@ -104,3 +104,58 @@ variable "existing_instance_profile_name" {
   default     = null
   description = "If set, use this EC2 instance profile for ECS instances instead of creating one"
 }
+
+# Use existing VPC/Subnets/ALB/TG/ECR/Logs instead of creating
+variable "use_existing_vpc" {
+  type        = bool
+  default     = false
+  description = "If true, skip creating VPC/Subnets and use provided IDs"
+}
+
+variable "existing_vpc_id" {
+  type        = string
+  default     = null
+  description = "Existing VPC ID when use_existing_vpc=true"
+}
+
+variable "existing_public_subnet_ids" {
+  type        = list(string)
+  default     = []
+  description = "Existing public subnet IDs when use_existing_vpc=true"
+}
+
+variable "existing_alb_name" {
+  type        = string
+  default     = null
+  description = "Existing ALB name to use (skip creating ALB if set)"
+}
+
+variable "existing_tg_name" {
+  type        = string
+  default     = null
+  description = "Existing Target Group name to use (skip creating TG if set)"
+}
+
+variable "existing_log_group_name" {
+  type        = string
+  default     = null
+  description = "Existing CloudWatch Log Group name to use for ECS logs"
+}
+
+variable "existing_ecr_api_repo_name" {
+  type        = string
+  default     = null
+  description = "Existing ECR repo name for api-gateway (skip create if set)"
+}
+
+variable "existing_ecr_product_repo_name" {
+  type        = string
+  default     = null
+  description = "Existing ECR repo name for product-service (skip create if set)"
+}
+
+variable "existing_ecr_inventory_repo_name" {
+  type        = string
+  default     = null
+  description = "Existing ECR repo name for inventory-service (skip create if set)"
+}

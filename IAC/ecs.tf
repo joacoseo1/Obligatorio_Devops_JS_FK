@@ -3,8 +3,13 @@ resource "aws_ecs_cluster" "cluster" {
 }
 
 resource "aws_cloudwatch_log_group" "ecs" {
+  count             = var.existing_log_group_name == null ? 1 : 0
   name              = "/ecs/${var.project_name}-${var.env}"
   retention_in_days = 14
+}
+
+locals {
+  log_group_name = var.existing_log_group_name != null ? var.existing_log_group_name : aws_cloudwatch_log_group.ecs[0].name
 }
 
 # Launch template for ECS EC2 instances
@@ -46,7 +51,7 @@ resource "aws_autoscaling_group" "ecs" {
   max_size                  = var.ecs_asg_max_size
   min_size                  = var.ecs_asg_min_size
   desired_capacity          = var.ecs_asg_desired_size
-  vpc_zone_identifier       = [for s in aws_subnet.public: s.id]
+  vpc_zone_identifier       = local.public_subnet_ids
   health_check_type         = "EC2"
   health_check_grace_period = 300
 
@@ -102,7 +107,7 @@ resource "aws_ecs_task_definition" "app" {
   container_definitions = jsonencode([
     {
       name      = "api-gateway"
-      image     = "${aws_ecr_repository.api_gateway.repository_url}:${var.image_tag_api}"
+      image     = "${local.ecr_api_repo_url}:${var.image_tag_api}"
       essential = true
       portMappings = [{
         containerPort = var.app_container_port
@@ -111,7 +116,7 @@ resource "aws_ecs_task_definition" "app" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.ecs.name
+          "awslogs-group"         = local.log_group_name
           "awslogs-region"        = var.aws_region
           "awslogs-stream-prefix" = "api-gateway"
         }
@@ -123,12 +128,12 @@ resource "aws_ecs_task_definition" "app" {
     },
     {
       name      = "product-service"
-      image     = "${aws_ecr_repository.product.repository_url}:${var.image_tag_product}"
+      image     = "${local.ecr_product_repo_url}:${var.image_tag_product}"
       essential = true
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.ecs.name
+          "awslogs-group"         = local.log_group_name
           "awslogs-region"        = var.aws_region
           "awslogs-stream-prefix" = "product-service"
         }
@@ -137,12 +142,12 @@ resource "aws_ecs_task_definition" "app" {
     },
     {
       name      = "inventory-service"
-      image     = "${aws_ecr_repository.inventory.repository_url}:${var.image_tag_inventory}"
+      image     = "${local.ecr_inventory_repo_url}:${var.image_tag_inventory}"
       essential = true
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.ecs.name
+          "awslogs-group"         = local.log_group_name
           "awslogs-region"        = var.aws_region
           "awslogs-stream-prefix" = "inventory-service"
         }
@@ -164,13 +169,13 @@ resource "aws_ecs_service" "service" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.tg.arn
+    target_group_arn = local.tg_arn
     container_name   = "api-gateway"
     container_port   = var.app_container_port
   }
 
   network_configuration {
-    subnets         = [for s in aws_subnet.public: s.id]
+    subnets         = local.public_subnet_ids
     security_groups = [aws_security_group.ecs_sg.id]
   }
 
@@ -178,7 +183,6 @@ resource "aws_ecs_service" "service" {
   deployment_maximum_percent         = 200
 
   depends_on = [
-    aws_lb_listener.http,
     aws_ecs_cluster_capacity_providers.this
   ]
 }

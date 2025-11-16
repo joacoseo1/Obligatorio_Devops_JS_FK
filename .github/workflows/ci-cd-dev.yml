@@ -113,11 +113,10 @@ jobs:
               id: vars
               run: echo "TAG=dev-${GITHUB_SHA::8}" >> $GITHUB_ENV
 
-            - name: Debug Docker image
+            - name: Test ECR login
               run: |
-                IMAGE="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_API_GATEWAY }}"
-                echo "Pushing to: $IMAGE:${{ env.TAG }}"
-
+                aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
+                  docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
             - name: Build & Push api-gateway
               run: |

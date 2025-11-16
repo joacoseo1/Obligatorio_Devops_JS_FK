@@ -1,6 +1,6 @@
 name: CI/CD Dev
 
-on: 
+on:
   workflow_dispatch:
 
 jobs:
